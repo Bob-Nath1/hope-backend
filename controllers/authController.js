@@ -47,7 +47,7 @@ export const registerUser = async (req, res) => {
       securityAnswer,
     } = req.body;
 
-    const plans = req.body.plans ? JSON.parse(req.body.plans) : [];
+    const plans = req.body.plans ? JSON.parse(req.body.plans).map(p => p.toUpperCase()) : [];
     console.log("Parsed plans array:", plans);
 
     
