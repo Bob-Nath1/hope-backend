@@ -13,7 +13,7 @@ import { eq, gt, and, sql, inArray } from "drizzle-orm";
 // Multer setup
 // --------------------------
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, "Uploads/"),
+  destination: (req, file, cb) => cb(null, "uploads/"),
   filename: (req, file, cb) => {
     const uniqueName = `${file.fieldname}_${Date.now()}${path.extname(
       file.originalname
@@ -47,7 +47,7 @@ export const registerUser = async (req, res) => {
       securityAnswer,
     } = req.body;
 
-    const plans = req.body.plans ? JSON.parse(req.body.plans).map(p => p.toUpperCase()) : [];
+    const plans = req.body.plans ? JSON.parse(req.body.plans).map(p => p) : [];
     console.log("Parsed plans array:", plans);
 
     
@@ -94,58 +94,59 @@ export const registerUser = async (req, res) => {
       ? `${baseUrl}/uploads/${req.files.profilePicture[0].filename}`
       : null;
 
-    // --------------------------
-    // Create User
-    // --------------------------
-    const insertedUsers = await db
-      .insert(schema.User)
-      .values({
-        name,
-        email,
-        password: hashedPassword,
-        phone: phone || "",
-        address: address || null,
-        dateOfBirth: new Date(dateOfBirth),
-        occupation: occupation || null,
-        bankName: bankName || null,
-        accountName: accountName || null,
-        accountNumber: accountNumber || null,
-        securityQuestion: securityQuestion || null,
-        securityAnswer: securityAnswer || null,
-        idDocument,
-        profilePicture,
-        role: "user",
-        status: "active",
-      })
-      .returning();
+ // --------------------------
+// Create User + Link Plans (TRANSACTION)
+// --------------------------
+const planRows = await db
+  .select()
+  .from(schema.Plan)
+  .where(inArray(schema.Plan.code, plans));
 
-    const user = insertedUsers[0];
-    console.log("👤 New user created:", user.id);
+if (!planRows.length) {
+  return res.status(400).json({ message: "Invalid plan selection." });
+}
 
-    // --------------------------
-    // Link User to Plans (UserPlan)
-    // --------------------------
-    const planRows = await db
-      .select()
-      .from(schema.Plan)
-      .where(inArray(schema.Plan.code, plans));
-       console.log("📦 Plan rows found in DB:", planRows);
+let user;
 
-    if (!planRows.length) {
-      return res
-        .status(400)
-        .json({ message: "Invalid plan selection." });
-    }
+await db.transaction(async (tx) => {
+  // 1️⃣ Insert user
+  const insertedUsers = await tx
+    .insert(schema.User)
+    .values({
+      name,
+      email,
+      password: hashedPassword,
+      phone: phone || "",
+      address: address || null,
+      dateOfBirth: new Date(dateOfBirth),
+      occupation: occupation || null,
+      bankName: bankName || null,
+      accountName: accountName || null,
+      accountNumber: accountNumber || null,
+      securityQuestion: securityQuestion || null,
+      securityAnswer: securityAnswer || null,
+      idDocument,
+      profilePicture,
+      role: "user",
+      status: "active",
+    })
+    .returning();
+
+  user = insertedUsers[0];
+
+  // 2️⃣ Insert user plans
+  await tx.insert(schema.UserPlan).values(
+    planRows.map((p) => ({
+      userId: user.id,
+      planId: p.id,
+    }))
+  );
+});
+
+console.log("👤 User + plans saved atomically:", user.id);
 
 
-const userPlanPayload = planRows.map((p) => ({
-  userId: user.id,
-  planId: p.id,
-}));
 
-console.log("🧩 Inserting into user_plan:", userPlanPayload);
-
-await db.insert(schema.UserPlan).values(userPlanPayload);
    
     // --------------------------
     // Generate JWT
