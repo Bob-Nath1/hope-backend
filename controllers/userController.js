@@ -73,3 +73,37 @@ export const getFinancialSummary = async (req, res) => {
   }
 };
 
+// ================= GET PROFILE =================
+export const getUserProfile = async (req, res) => {
+  try {
+    const user = await db.query.users.findFirst({
+      where: (users, { eq }) => eq(users.id, req.user.id),
+    });
+
+    res.json(user);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// ================= UPDATE PROFILE =================
+export const updateUserProfile = async (req, res) => {
+  try {
+    const { name, email, phone } = req.body;
+
+    await db
+      .update(schema.users)
+      .set({ name, email, phone })
+      .where(eq(schema.users.id, req.user.id));
+
+    const updatedUser = await db.query.users.findFirst({
+      where: (users, { eq }) => eq(users.id, req.user.id),
+    });
+
+    res.json(updatedUser);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Update failed" });
+  }
+};

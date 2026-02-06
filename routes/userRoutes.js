@@ -15,6 +15,62 @@ const router = express.Router();
 router.use(verifyToken);
 router.use(verifyUser);
 
+
+
+/* =====================================================
+   USER PROFILE ROUTES (NEW)
+===================================================== */
+
+// GET USER PROFILE
+router.get("/profile", async (req, res) => {
+  try {
+    const [foundUser] = await db
+      .select()
+      .from(user)
+      .where(eq(user.id, req.user.id));
+
+    if (!foundUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(foundUser);
+  } catch (err) {
+    console.error("Profile fetch error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+
+
+/* =====================================================
+   USER PROFILE ROUTES (NEW)
+===================================================== */
+
+// GET USER PROFILE
+router.get("/profile", async (req, res) => {
+  try {
+    const [foundUser] = await db
+      .select()
+      .from(user)
+      .where(eq(user.id, req.user.id));
+
+    if (!foundUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(foundUser);
+  } catch (err) {
+    console.error("Profile fetch error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+
+
+
+
 // CREATE INVESTMENT
 router.post("/investment", async (req, res) => {
   try {
