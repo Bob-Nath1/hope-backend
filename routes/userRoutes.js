@@ -43,25 +43,29 @@ router.get("/profile", async (req, res) => {
 
 
 
-/* =====================================================
-   USER PROFILE ROUTES (NEW)
-===================================================== */
 
-// GET USER PROFILE
-router.get("/profile", async (req, res) => {
+// UPDATE USER PROFILE
+router.put("/profile", async (req, res) => {
   try {
-    const [foundUser] = await db
-      .select()
-      .from(user)
-      .where(eq(user.id, req.user.id));
+    const { name, phone, email } = req.body;
 
-    if (!foundUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    const [updatedUser] = await db
+      .update(user)
+      .set({
+        name,
+        phone,
+        email,
+      })
+      .where(eq(user.id, req.user.id))
+      .returning();
 
-    res.json(foundUser);
+    res.json({
+      success: true,
+      message: "Profile updated successfully",
+      data: updatedUser,
+    });
   } catch (err) {
-    console.error("Profile fetch error:", err);
+    console.error("Profile update error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
