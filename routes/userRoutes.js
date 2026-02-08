@@ -26,8 +26,8 @@ router.get("/profile", async (req, res) => {
   try {
     const [foundUser] = await db
       .select()
-      .from(user)
-      .where(eq(user.id, req.user.id));
+      .from(schema.user)
+      .where(eq(schema.user.id, req.user.id));
 
     if (!foundUser) {
       return res.status(404).json({ message: "User not found" });
@@ -50,13 +50,13 @@ router.put("/profile", async (req, res) => {
     const { name, phone, email } = req.body;
 
     const [updatedUser] = await db
-      .update(user)
+      .update(schema.user)
       .set({
         name,
         phone,
         email,
       })
-      .where(eq(user.id, req.user.id))
+      .where(eq(schema.user.id, req.user.id))
       .returning();
 
     res.json({
