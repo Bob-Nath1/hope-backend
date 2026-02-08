@@ -1,0 +1,5 @@
+
+profilePicture: {
+  type: String,
+  default: "",
+},

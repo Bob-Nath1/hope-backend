@@ -2,7 +2,8 @@
 
 import { db } from "../db.js";
 import { investment, contribution, Withdrawal} from "../drizzle/schema.js";
-import { sql, eq} from "drizzle-orm"
+import { sql, eq} from "drizzle-orm";
+import User from "../models/User.js";
 
 export const createInvestment = async (req, res) => {
   try {
@@ -105,5 +106,26 @@ export const updateUserProfile = async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Update failed" });
+  }
+};
+
+export const uploadProfilePicture = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    const imagePath = req.file.path;
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { profilePicture: imagePath },
+      { new: true }
+    );
+
+    res.json({
+      message: "Profile picture uploaded successfully",
+      profilePicture: user.profilePicture,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };

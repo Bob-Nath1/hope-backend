@@ -11,6 +11,7 @@ import adminReportRoutes from "./routes/adminReportRoutes.js";
 import supportRoutes from "./routes/supportRoutes.js";
 import communityRoutes from "./routes/communityRoutes.js";
 import contributionRoutes from "./routes/contributionRoutes.js";
+import path from "path";
 
 const app = express();
 
@@ -48,6 +49,7 @@ app.use("/api/user", userRoutes);
 app.use("/api/support", supportRoutes);
 app.use("/api/community", communityRoutes);
 app.use("/api/contributions", contributionRoutes);
+app.use("/uploads", express.static("uploads"));
 
 /* -------------------- FALLBACKS -------------------- */
 

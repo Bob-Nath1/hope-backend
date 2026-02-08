@@ -6,6 +6,8 @@ import * as schema from "../drizzle/schema.js";
 import { investment, loan, notification } from "../drizzle/schema.js";
 import { eq, desc } from "drizzle-orm";
 import { getFinancialSummary } from "../controllers/userController.js";
+import { upload } from "../middleware/uploadMiddleware.js";
+import { uploadProfilePicture } from "../controllers/userController.js";
 
 
 
@@ -72,7 +74,12 @@ router.put("/profile", async (req, res) => {
 
 
 
-
+router.post(
+  "/upload-profile-picture",
+  verifyToken,
+  upload.single("profilePicture"),
+  uploadProfilePicture
+);
 
 
 // CREATE INVESTMENT
