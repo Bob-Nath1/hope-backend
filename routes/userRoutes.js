@@ -6,8 +6,7 @@ import * as schema from "../drizzle/schema.js";
 import { investment, loan, notification } from "../drizzle/schema.js";
 import { eq, desc } from "drizzle-orm";
 import { getFinancialSummary } from "../controllers/userController.js";
-import { upload } from "../middleware/uploadMiddleware.js";
-import { uploadProfilePicture } from "../controllers/userController.js";
+import upload from "../middleware/uploadMiddleware.js";
 
 
 
@@ -23,63 +22,64 @@ router.use(verifyUser);
    USER PROFILE ROUTES (NEW)
 ===================================================== */
 
-// GET USER PROFILE
+// GET PROFILE
 router.get("/profile", async (req, res) => {
   try {
-    const [foundUser] = await db
+    const [user] = await db
       .select()
       .from(schema.User)
       .where(eq(schema.User.id, req.user.id));
 
-    if (!foundUser) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.json(foundUser);
+    res.json(user);
   } catch (err) {
-    console.error("Profile fetch error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
 
 
 
+// UPLOAD PROFILE PICTURE
+router.post(
+  "/upload-profile-picture",
+  upload.single("image"),
+  async (req, res) => {
+    try {
+      const imageUrl = req.file.path;
+
+      const [updated] = await db
+        .update(schema.User)
+        .set({ profilePicture: imageUrl })
+        .where(eq(schema.User.id, req.user.id))
+        .returning();
+
+      res.json({
+        message: "Profile picture updated",
+        imageUrl: updated.profilePicture,
+      });
+    } catch (err) {
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
 
 
-// UPDATE USER PROFILE
+
+// UPDATE PROFILE
 router.put("/profile", async (req, res) => {
   try {
     const { name, phone, email } = req.body;
 
-    const [updatedUser] = await db
+    const [updated] = await db
       .update(schema.User)
-      .set({
-        name,
-        phone,
-        email,
-      })
+      .set({ name, phone, email })
       .where(eq(schema.User.id, req.user.id))
       .returning();
 
-    res.json({
-      success: true,
-      message: "Profile updated successfully",
-      data: updatedUser,
-    });
+    res.json(updated);
   } catch (err) {
-    console.error("Profile update error:", err);
     res.status(500).json({ message: "Server error" });
   }
 });
-
-
-
-router.post(
-  "/upload-profile-picture",
-  verifyToken,
-  upload.single("profilePicture"),
-  uploadProfilePicture
-);
 
 
 // CREATE INVESTMENT
