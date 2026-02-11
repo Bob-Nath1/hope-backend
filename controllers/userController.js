@@ -3,7 +3,7 @@
 import { db } from "../db.js";
 import { investment, contribution, Withdrawal} from "../drizzle/schema.js";
 import { sql, eq} from "drizzle-orm";
-import User from "../models/User.js";
+import { User } from "../drizzle/schema.js"
 
 export const createInvestment = async (req, res) => {
   try {

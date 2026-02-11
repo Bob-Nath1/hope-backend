@@ -1,5 +1,0 @@
-
-profilePicture: {
-  type: String,
-  default: "",
-},
