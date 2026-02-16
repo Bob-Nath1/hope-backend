@@ -22,7 +22,10 @@ const storage = multer.diskStorage({
   },
 });
 
-export const upload = multer({ storage });
+export const upload = multer({ storage }).fields([
+  { name: "profilePicture", maxCount: 1 },
+  { name: "idDocument", maxCount: 1 },
+]);
 
 // --------------------------
 // Register User
@@ -84,7 +87,7 @@ export const registerUser = async (req, res) => {
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const baseUrl = process.env.BASE_URL || "http://localhost:5000";
+    const baseUrl = process.env.BASE_URL || "https://hope-backend-1-mpmx.onrender.com";
 
     const idDocument = req.files?.idDocument
       ? `${baseUrl}/uploads/${req.files.idDocument[0].filename}`
@@ -187,7 +190,7 @@ export const loginUser = async (req, res) => {
     }
 
     const users = await db
-      .select()
+      .select() 
       .from(schema.User)
       .where(eq(schema.User.email, email));
 
