@@ -22,10 +22,7 @@ const storage = multer.diskStorage({
   },
 });
 
-export const upload = multer({ storage }).fields([
-  { name: "profilePicture", maxCount: 1 },
-  { name: "idDocument", maxCount: 1 },
-]);
+export const upload = multer({ storage });
 
 // --------------------------
 // Register User
