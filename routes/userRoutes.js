@@ -80,6 +80,8 @@ router.put(
   "/profile",
   upload.single("avatar"),
   async (req, res) => {
+    console.log("req.file:", req.file);
+    console.log("req.body:", req.body);
   try {
     const { name, phone, email } = req.body;
 
