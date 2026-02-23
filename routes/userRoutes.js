@@ -91,7 +91,7 @@ router.put(
 
     const [updated] = await db
       .update(schema.User)
-      .set({ name, phone, email })
+      .set(updateData)
       .where(eq(schema.User.id, req.user.id))
       .returning();
 
