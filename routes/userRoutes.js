@@ -25,13 +25,24 @@ router.use(verifyUser);
 // GET PROFILE
 router.get("/profile", async (req, res) => {
   try {
+
     const [user] = await db
       .select()
       .from(schema.User)
       .where(eq(schema.User.id, req.user.id));
 
-    res.json(user);
+    const plans = await db
+      .select()
+      .from(schema.UserPlan)
+      .where(eq(schema.UserPlan.userId, req.user.id));
+
+    res.json({
+      ...user,
+      plans: plans.map(p => p.planId)
+    });
+
   } catch (err) {
+    console.error(err);
     res.status(500).json({ message: "Server error" });
   }
 });
@@ -65,9 +76,18 @@ router.post(
 
 
 // UPDATE PROFILE
-router.put("/profile", async (req, res) => {
+router.put(
+  "/profile",
+  upload.single("avatar"),
+  async (req, res) => {
   try {
     const { name, phone, email } = req.body;
+
+      const updateData = { name, phone, email };
+
+      if (req.file) {
+        updateData.profilePicture = req.file.path;
+      }
 
     const [updated] = await db
       .update(schema.User)
@@ -260,6 +280,5 @@ router.patch("/notifications/read/:id", async (req, res) => {
   }
 });
 
-router.get("/financial-summary", verifyToken, getFinancialSummary);
 
 export default router;
