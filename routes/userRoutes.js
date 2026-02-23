@@ -83,7 +83,7 @@ router.put(
   try {
     const { name, phone, email } = req.body;
 
-      const updateData = { name, phone, email };
+     let updateData = { name, phone, email };
 
       if (req.file) {
         updateData.profilePicture = req.file.path;
