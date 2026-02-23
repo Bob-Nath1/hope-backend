@@ -111,6 +111,10 @@ export const updateUserProfile = async (req, res) => {
 
 export const uploadProfilePicture = async (req, res) => {
   try {
+    console.log("Uploaded file:", req.file);
+    console.log("Uploaded files:", req.files);
+
+
     const userId = req.user.id;
 
     const imagePath = req.file.path;
