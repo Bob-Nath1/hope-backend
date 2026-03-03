@@ -157,3 +157,27 @@ export const notification = pgTable("notification", {
   isread: boolean("isread").default(false),
   createdat: timestamp("createdat").defaultNow(),
 });
+
+
+export const userSettings = pgTable("user_settings", {
+  id: serial("id").primaryKey(),
+
+  userId: integer("userId")
+    .notNull()
+    .references(() => User.id),
+
+  notificationsEnabled: boolean("notificationsEnabled")
+    .default(true),
+
+  darkMode: boolean("darkMode")
+    .default(false),
+
+  language: varchar("language", { length: 50 })
+    .default("English"),
+
+  createdAt: timestamp("createdAt").defaultNow(),
+
+  updatedAt: timestamp("updatedAt")
+    .defaultNow()
+    .$onUpdate(() => new Date()),
+});
