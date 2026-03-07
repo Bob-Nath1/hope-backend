@@ -1,6 +1,6 @@
 // controllers/settingsController.js
 import { db } from "../db.js";
-import { userSettings, users } from "../drizzle/schema.js"; // adjust if users table name is different
+import { userSettings, User } from "../drizzle/schema.js"; // adjust if users table name is different
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
