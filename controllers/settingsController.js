@@ -1,6 +1,6 @@
 // controllers/settingsController.js
 import { db } from "../db.js";
-import { userSettings, User } from "../drizzle/schema.js"; // adjust if users table name is different
+import { UserSettings, User } from "../drizzle/schema.js"; // adjust if users table name is different
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
@@ -10,7 +10,7 @@ const otpStore = new Map(); // ← consider moving to Redis / DB later
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: process.env.EMAIL_USER,
+    User: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
 });
@@ -19,8 +19,8 @@ export const getSettings = async (req, res) => {
   try {
     const [settings] = await db
       .select()
-      .from(userSettings)
-      .where(eq(userSettings.userId, req.user.id));
+      .from(UserSettings)
+      .where(eq(UserSettings.UserId, req.User.id));
 
     if (!settings) {
       return res.json({
@@ -51,14 +51,14 @@ export const updateSettings = async (req, res) => {
 
     const [existing] = await db
       .select()
-      .from(userSettings)
-      .where(eq(userSettings.userId, req.user.id));
+      .from(UserSettings)
+      .where(eq(UserSettings.UserId, req.User.id));
 
     if (!existing) {
       const [created] = await db
-        .insert(userSettings)
+        .insert(UserSettings)
         .values({
-          userId: req.user.id,
+          UserId: req.User.id,
           notificationsEnabled,
           darkMode,
           language,
@@ -68,13 +68,13 @@ export const updateSettings = async (req, res) => {
     }
 
     const [updated] = await db
-      .update(userSettings)
+      .update(UserSettings)
       .set({
         notificationsEnabled,
         darkMode,
         language,
       })
-      .where(eq(userSettings.userId, req.user.id))
+      .where(eq(UserSettings.UserId, req.User.id))
       .returning();
 
     res.json(updated);
@@ -92,16 +92,16 @@ export const requestPasswordChange = async (req, res) => {
   }
 
   try {
-    const [user] = await db.select().from(users).where(eq(users.id, req.user.id));
-    if (!user) return res.status(404).json({ message: "User not found" });
+    const [User] = await db.select().from(Users).where(eq(Users.id, req.User.id));
+    if (!User) return res.status(404).json({ message: "User not found" });
 
-    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    const isMatch = await bcrypt.compare(currentPassword, User.password);
     if (!isMatch) return res.status(401).json({ message: "Current password incorrect" });
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const expires = Date.now() + 10 * 60 * 1000;
 
-    otpStore.set(req.user.id, {
+    otpStore.set(req.User.id, {
       otp,
       expires,
       newPasswordHash: await bcrypt.hash(newPassword, 10),
@@ -109,7 +109,7 @@ export const requestPasswordChange = async (req, res) => {
 
     await transporter.sendMail({
       from: process.env.EMAIL_USER,
-      to: user.email,
+      to: User.email,
       subject: "Your Password Change Verification Code",
       text: `Your verification code is ${otp}. It expires in 10 minute.`,
       html: `<p>Your verification code is <strong>${otp}</strong>. It expires in 10 minutes.</p>`,
@@ -125,11 +125,11 @@ export const requestPasswordChange = async (req, res) => {
 export const verifyPasswordChange = async (req, res) => {
   const { otp } = req.body;
 
-  const data = otpStore.get(req.user.id);
+  const data = otpStore.get(req.User.id);
   if (!data) return res.status(400).json({ message: "No pending request" });
 
   if (Date.now() > data.expires) {
-    otpStore.delete(req.user.id);
+    otpStore.delete(req.User.id);
     return res.status(400).json({ message: "Code expired" });
   }
 
@@ -138,11 +138,11 @@ export const verifyPasswordChange = async (req, res) => {
   }
 
   await db
-    .update(users)
+    .update(Users)
     .set({ password: data.newPasswordHash })
-    .where(eq(users.id, req.user.id));
+    .where(eq(Users.id, req.User.id));
 
-  otpStore.delete(req.user.id);
+  otpStore.delete(req.User.id);
 
   res.json({ message: "Password changed successfully" });
 };
