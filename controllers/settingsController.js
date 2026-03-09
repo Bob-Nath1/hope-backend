@@ -1,6 +1,6 @@
 // controllers/settingsController.js
 import { db } from "../db.js";
-import { UserSettings, User } from "../drizzle/schema.js"; // adjust if users table name is different
+import { userSettings, User } from "../drizzle/schema.js"; // adjust if users table name is different
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import nodemailer from "nodemailer";
@@ -19,8 +19,8 @@ export const getSettings = async (req, res) => {
   try {
     const [settings] = await db
       .select()
-      .from(UserSettings)
-      .where(eq(UserSettings.UserId, req.User.id));
+      .from(userSettings)
+      .where(eq(userSettings.UserId, req.User.id));
 
     if (!settings) {
       return res.json({
@@ -51,12 +51,12 @@ export const updateSettings = async (req, res) => {
 
     const [existing] = await db
       .select()
-      .from(UserSettings)
-      .where(eq(UserSettings.UserId, req.User.id));
+      .from(userSettings)
+      .where(eq(userSettings.UserId, req.User.id));
 
     if (!existing) {
       const [created] = await db
-        .insert(UserSettings)
+        .insert(userSettings)
         .values({
           UserId: req.User.id,
           notificationsEnabled,
@@ -68,13 +68,13 @@ export const updateSettings = async (req, res) => {
     }
 
     const [updated] = await db
-      .update(UserSettings)
+      .update(userSettings)
       .set({
         notificationsEnabled,
         darkMode,
         language,
       })
-      .where(eq(UserSettings.UserId, req.User.id))
+      .where(eq(userSettings.UserId, req.User.id))
       .returning();
 
     res.json(updated);
